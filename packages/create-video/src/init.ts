@@ -1,8 +1,10 @@
 import path from 'node:path';
 import chalk from 'chalk';
 import execa from 'execa';
+import {addFlake} from './add-flake';
 import {addTailwindRootCss, addTailwindToConfig} from './add-tailwind';
 import {createYarnYmlFile} from './add-yarn2-support';
+import {askFlake} from './ask-flake';
 import {askSkills} from './ask-skills';
 import {askTailwind} from './ask-tailwind';
 import {createPublicFolder} from './create-public-folder';
@@ -25,6 +27,7 @@ import prompts from './prompts';
 import {resolveProjectRoot} from './resolve-project-root';
 import {
 	getDirectoryArgument,
+	isFlakeFlagSelected,
 	isNoTailwindFlagSelected,
 	isTmpFlagSelected,
 	isYesFlagSelected,
@@ -158,6 +161,10 @@ export const init = async () => {
 
 	const shouldInstallSkills = isYesFlagSelected() ? false : await askSkills();
 
+	const shouldAddFlake = isYesFlagSelected()
+		? isFlakeFlagSelected()
+		: await askFlake();
+
 	const pkgManager = selectPackageManager();
 	const pkgManagerVersion = await getPackageManagerVersionOrNull(pkgManager);
 
@@ -194,6 +201,10 @@ export const init = async () => {
 		pkgManagerVersion,
 		projectRoot,
 	});
+
+	if (shouldAddFlake) {
+		addFlake(projectRoot);
+	}
 
 	if (!isInsideGitRepo) {
 		await getGitStatus(projectRoot);
